@@ -1,103 +1,56 @@
-// import React, { useState, useEffect, useRef } from 'react';
-// import { StatusBar } from 'expo-status-bar';
-// import { Text, View, Button, Animated } from 'react-native';
-// import tw from 'tailwind-react-native-classnames';
-
-// export default function App() {
-//   const [message, setMessage] = useState("Welcome to Yohannes Yeneakl's first app!");
-//   const fadeAnim = useRef(new Animated.Value(0)).current; // Initial opacity value of 0
-
-//   useEffect(() => {
-//     Animated.timing(fadeAnim, {
-//       toValue: 1,
-//       duration: 1000,
-//       useNativeDriver: true,
-//     }).start();
-//   }, [message]);
-
-//   const handleLeftButtonPress = () => {
-//     setMessage((prevMessage) =>
-//       prevMessage === "Welcome to Yohannes Yeneakl's first app!"
-//         ? "Yohannes Yeneakl's first app!"
-//         : "Welcome to Yohannes Yeneakl's first app!"
-//     );
-//     fadeAnim.setValue(0); // Reset animation
-//   };
-
-//   const handleMiddleButtonPress = () => {
-//     setMessage("Middle button pressed!");
-//     fadeAnim.setValue(0); // Reset animation
-//   };
-
-//   const handleRightButtonPress = () => {
-//     setMessage("Right button pressed!");
-//     fadeAnim.setValue(0); // Reset animation
-//   };
-
-//   return (
-//     <View style={tw`flex-1 bg-pink-200 bg-opacity-80 items-center justify-center p-5`}>
-//       <Animated.Text style={[tw`text-4xl font-bold mb-5`, { opacity: fadeAnim }]}>
-//         {message}
-//       </Animated.Text>
-//       <View style={tw`flex-row justify-between w-4/5 p-5 border-4 border-gray-400 rounded-lg bg-white shadow-lg`}>
-//         <Button title="Left" onPress={handleLeftButtonPress} />
-//         <Button title="Middle" onPress={handleMiddleButtonPress} />
-//         <Button title="Right" onPress={handleRightButtonPress} />
-//       </View>
-//       <StatusBar style="auto" />
-//     </View>
-//   );
-// }
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, TextInput, Button, Alert } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 
 export default function App() {
-  const [randomNumber, setRandomNumber] = useState(Math.floor(Math.random() * 100) + 1);
-  const [guess, setGuess] = useState('');
-  const [message, setMessage] = useState('Guess a number between 1 and 100!');
-  const [attempts, setAttempts] = useState(0);
+  const [result, setResult] = useState('0');
+  const [expression, setExpression] = useState('');
 
-  const handleGuess = () => {
-    const userGuess = parseInt(guess, 10);
-    setAttempts(attempts + 1);
-
-    if (isNaN(userGuess)) {
-      setMessage('Please enter a valid number!');
-    } else if (userGuess === randomNumber) {
-      Alert.alert(
-        'Congratulations!',
-        `You guessed the number in ${attempts + 1} attempts!`,
-        [{ text: 'Play Again', onPress: resetGame }]
-      );
-    } else if (userGuess < randomNumber) {
-      setMessage('Too low! Try again.');
+  const handleButtonPress = (value) => {
+    if (value === '=') {
+      try {
+        const evalResult = eval(expression).toString();
+        setResult(evalResult);
+        setExpression(evalResult);
+      } catch (error) {
+        setResult('Error');
+      }
+    } else if (value === 'C') {
+      setResult('0');
+      setExpression('');
     } else {
-      setMessage('Too high! Try again.');
+      setExpression((prev) => prev + value);
     }
-
-    setGuess('');
   };
 
-  const resetGame = () => {
-    setRandomNumber(Math.floor(Math.random() * 100) + 1);
-    setGuess('');
-    setMessage('Guess a number between 1 and 100!');
-    setAttempts(0);
-  };
+  const buttons = [
+    ['7', '8', '9', '/'],
+    ['4', '5', '6', '*'],
+    ['1', '2', '3', '-'],
+    ['C', '0', '=', '+'],
+  ];
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Guess the Number Game</Text>
-      <Text style={styles.message}>{message}</Text>
-      <TextInput
-        style={styles.input}
-        keyboardType="numeric"
-        placeholder="Enter your guess"
-        value={guess}
-        onChangeText={setGuess}
-      />
-      <Button title="Submit Guess" onPress={handleGuess} />
-      <Text style={styles.attempts}>Attempts: {attempts}</Text>
+      <Text style={styles.developerText}>Developed by Yohannes Yeneakla</Text>
+      <View style={styles.calculator}>
+        <Text style={styles.expression}>{expression}</Text>
+        <Text style={styles.result}>{result}</Text>
+        <View style={styles.buttons}>
+          {buttons.map((row, rowIndex) => (
+            <View key={rowIndex} style={styles.row}>
+              {row.map((button) => (
+                <TouchableOpacity
+                  key={button}
+                  style={styles.button}
+                  onPress={() => handleButtonPress(button)}
+                >
+                  <Text style={styles.buttonText}>{button}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          ))}
+        </View>
+      </View>
     </View>
   );
 }
@@ -107,31 +60,56 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
     backgroundColor: '#f0f0f0',
   },
-  title: {
-    fontSize: 24,
+  developerText: {
+    fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 20,
+    color: '#333',
   },
-  message: {
-    fontSize: 18,
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  input: {
+  calculator: {
     width: '80%',
-    borderWidth: 1,
-    borderColor: '#ccc',
-    padding: 10,
-    marginBottom: 20,
-    borderRadius: 5,
     backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 5,
   },
-  attempts: {
-    marginTop: 20,
-    fontSize: 16,
-    color: '#555',
+  expression: {
+    fontSize: 24,
+    textAlign: 'right',
+    color: '#888',
+    marginBottom: 10,
+  },
+  result: {
+    fontSize: 36,
+    textAlign: 'right',
+    fontWeight: 'bold',
+    marginBottom: 20,
+    color: '#333',
+  },
+  buttons: {
+    marginTop: 10,
+  },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  button: {
+    width: '23%',
+    aspectRatio: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#e0e0e0',
+    borderRadius: 10,
+  },
+  buttonText: {
+    fontSize: 24,
+    color: '#333',
   },
 });
