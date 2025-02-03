@@ -31,7 +31,7 @@ export default function App() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.developerText}>Developed by Yohannes Yeneakla teshome</Text>
+      <Text style={styles.developerText}>Developed by @Yohannes Yeneakla teshome</Text>
       <View style={styles.calculator}>
         <Text style={styles.expression}>{expression}</Text>
         <Text style={styles.result}>{result}</Text>
