@@ -114,16 +114,16 @@
 //   },
 // });
 import React, { useState, useContext, useCallback } from "react";
-import { 
-  SafeAreaView, 
-  ScrollView, 
-  Text, 
-  TextInput, 
-  TouchableOpacity, 
-  View, 
-  StyleSheet, 
-  Switch, 
-  Modal 
+import {
+  SafeAreaView,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+  StyleSheet,
+  Switch,
+  Modal,
 } from "react-native";
 
 // Create a Context for the theme (Dark/Light mode)
@@ -148,10 +148,11 @@ const App = () => {
   const [grade, setGrade] = useState("");
   const [darkMode, setDarkMode] = useState(false); // state for dark mode
   const [isSidebarVisible, setSidebarVisible] = useState(false); // Sidebar visibility
-  
+  const [selectedDate, setSelectedDate] = useState(null); // Selected date for calendar details
+
   // Function to toggle the theme
   const toggleTheme = useCallback(() => {
-    setDarkMode(prev => !prev);
+    setDarkMode((prev) => !prev);
   }, []);
 
   // Get today's date
@@ -175,7 +176,7 @@ const App = () => {
       ...prev,
       [today]: attendance,
     }));
-    setAttendance({});
+    setAttendance({}); // Reset attendance for the next day
   };
 
   // Add new student
@@ -202,6 +203,11 @@ const App = () => {
 
   // Sorted students by name
   const sortedStudents = [...students].sort((a, b) => a.name.localeCompare(b.name));
+
+  // Show attendance details for a specific date
+  const showAttendanceDetails = (date) => {
+    setSelectedDate(date);
+  };
 
   return (
     <ThemeContext.Provider value={darkMode}>
@@ -310,8 +316,8 @@ const App = () => {
             <Text style={styles.buttonText}>Submit Attendance</Text>
           </TouchableOpacity>
 
-          {/* Calendar View */}
-          <Text style={styles.calendarTitle}>Attendance Calendar</Text>
+          {/* Previous Attendance Records */}
+          <Text style={styles.calendarTitle}>Previous Attendance Records</Text>
           {Object.entries(calendar).map(([date, attendanceData]) => (
             <View key={date} style={[styles.calendarEntry, darkMode && styles.darkCard]}>
               <Text style={[styles.calendarDate, darkMode && styles.darkText]}>{date}</Text>
@@ -352,6 +358,10 @@ const App = () => {
                   thumbColor={darkMode ? "#f8fafc" : "#2563eb"}
                 />
               </View>
+              <Text style={[styles.sidebarTitle, darkMode && styles.darkText]}>About Me</Text>
+              <Text style={[styles.sidebarOptionText, darkMode && styles.darkText]}>
+                Developer: Yohannes
+              </Text>
               <TouchableOpacity onPress={() => setSidebarVisible(false)} style={styles.sidebarButton}>
                 <Text style={styles.buttonText}>Close</Text>
               </TouchableOpacity>
