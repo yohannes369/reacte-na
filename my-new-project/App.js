@@ -113,7 +113,7 @@
 //     color: '#333',
 //   },
 // });
-import React, { useState } from "react";
+import React, { useState, useContext, useCallback } from "react";
 import { 
   SafeAreaView, 
   ScrollView, 
@@ -121,8 +121,13 @@ import {
   TextInput, 
   TouchableOpacity, 
   View, 
-  StyleSheet 
+  StyleSheet, 
+  Switch, 
+  Modal 
 } from "react-native";
+
+// Create a Context for the theme (Dark/Light mode)
+const ThemeContext = React.createContext();
 
 const App = () => {
   const [students, setStudents] = useState([
@@ -141,12 +146,21 @@ const App = () => {
   const [name, setName] = useState("");
   const [age, setAge] = useState("");
   const [grade, setGrade] = useState("");
+  const [darkMode, setDarkMode] = useState(false); // state for dark mode
+  const [isSidebarVisible, setSidebarVisible] = useState(false); // Sidebar visibility
+  
+  // Function to toggle the theme
+  const toggleTheme = useCallback(() => {
+    setDarkMode(prev => !prev);
+  }, []);
 
+  // Get today's date
   const getTodayDate = () => {
     const today = new Date();
     return today.toISOString().split("T")[0];
   };
 
+  // Update attendance for a student
   const updateAttendance = (studentId, status) => {
     setAttendance((prev) => ({
       ...prev,
@@ -154,6 +168,7 @@ const App = () => {
     }));
   };
 
+  // Submit attendance
   const submitAttendance = () => {
     const today = getTodayDate();
     setCalendar((prev) => ({
@@ -163,6 +178,7 @@ const App = () => {
     setAttendance({});
   };
 
+  // Add new student
   const addStudent = () => {
     if (name && age && grade) {
       const newStudent = {
@@ -179,275 +195,335 @@ const App = () => {
     }
   };
 
+  // Delete a student
   const deleteStudent = (id) => {
     setStudents(students.filter((student) => student.id !== id));
   };
 
+  // Sorted students by name
   const sortedStudents = [...students].sort((a, b) => a.name.localeCompare(b.name));
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollViewContent}>
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Bonga University</Text>
-          <Text style={styles.headerSubtitle}>Student Management System</Text>
-        </View>
-
-        {/* Add Student Button */}
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={() => setShowAddForm(!showAddForm)}
-        >
-          <Text style={styles.buttonText}>
-            {showAddForm ? "Cancel" : "Add Student"}
-          </Text>
-        </TouchableOpacity>
-
-        {/* Add Student Form */}
-        {showAddForm && (
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.input}
-              placeholder="Name"
-              value={name}
-              onChangeText={setName}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Age"
-              value={age}
-              onChangeText={setAge}
-              keyboardType="numeric"
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Grade"
-              value={grade}
-              onChangeText={setGrade}
-            />
-            <TouchableOpacity style={styles.addButton} onPress={addStudent}>
-              <Text style={styles.buttonText}>Save Student</Text>
-            </TouchableOpacity>
+    <ThemeContext.Provider value={darkMode}>
+      <SafeAreaView style={[styles.container, darkMode && styles.darkContainer]}>
+        <ScrollView contentContainerStyle={styles.scrollViewContent}>
+          {/* Header */}
+          <View style={styles.header}>
+            <Text style={[styles.headerTitle, darkMode && styles.darkText]}>Bonga University</Text>
+            <Text style={[styles.headerSubtitle, darkMode && styles.darkText]}>
+              Student Management System
+            </Text>
           </View>
-        )}
 
-        {/* Student List */}
-        <View>
-          {sortedStudents.map((student) => {
-            const studentAttendance = attendance[student.id] || "Absent"; // Default to "Absent"
-            return (
-              <View key={student.id} style={styles.studentCard}>
-                <Text style={styles.studentName}>{student.name}</Text>
-                <Text style={styles.studentInfo}>Age: {student.age}</Text>
-                <Text style={styles.studentInfo}>Grade: {student.grade}</Text>
-                <Text style={styles.studentInfo}>
-                  Attendance:{" "}
-                  <Text
-                    style={[
-                      styles.attendanceText,
-                      studentAttendance === "Present"
-                        ? styles.attendancePresent
-                        : studentAttendance === "Late"
-                        ? styles.attendanceLate
-                        : styles.attendanceAbsent,
-                    ]}
-                  >
-                    {studentAttendance}
-                  </Text>
-                </Text>
+          {/* Add Student Button */}
+          <TouchableOpacity style={styles.addButton} onPress={() => setShowAddForm(!showAddForm)}>
+            <Text style={styles.buttonText}>
+              {showAddForm ? "Cancel" : "Add Student"}
+            </Text>
+          </TouchableOpacity>
 
-                {/* Attendance Buttons */}
-                <View style={styles.attendanceButtonsContainer}>
-                  <TouchableOpacity
-                    style={[styles.attendanceButton, styles.presentButton]}
-                    onPress={() => updateAttendance(student.id, "Present")}
-                  >
-                    <Text style={styles.buttonText}>Present</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.attendanceButton, styles.lateButton]}
-                    onPress={() => updateAttendance(student.id, "Late")}
-                  >
-                    <Text style={styles.buttonText}>Late</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.attendanceButton, styles.absentButton]}
-                    onPress={() => updateAttendance(student.id, "Absent")}
-                  >
-                    <Text style={styles.buttonText}>Absent</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            );
-          })}
-        </View>
+          {/* Add Student Form */}
+          {showAddForm && (
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.input}
+                placeholder="Name"
+                value={name}
+                onChangeText={setName}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Age"
+                value={age}
+                onChangeText={setAge}
+                keyboardType="numeric"
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Grade"
+                value={grade}
+                onChangeText={setGrade}
+              />
+              <TouchableOpacity style={styles.addButton} onPress={addStudent}>
+                <Text style={styles.buttonText}>Save Student</Text>
+              </TouchableOpacity>
+            </View>
+          )}
 
-        {/* Submit Button */}
-        <TouchableOpacity style={styles.submitButton} onPress={submitAttendance}>
-          <Text style={styles.buttonText}>Submit Attendance</Text>
-        </TouchableOpacity>
-
-        {/* Calendar View */}
-        <Text style={styles.calendarTitle}>Attendance Calendar</Text>
-        {Object.entries(calendar).map(([date, attendanceData]) => (
-          <View key={date} style={styles.calendarEntry}>
-            <Text style={styles.calendarDate}>{date}</Text>
-            {Object.entries(attendanceData).map(([studentId, status]) => {
-              const student = students.find((s) => s.id === Number(studentId));
+          {/* Student List */}
+          <View>
+            {sortedStudents.map((student) => {
+              const studentAttendance = attendance[student.id] || "Absent";
               return (
-                <Text key={studentId} style={styles.calendarText}>
-                  {student?.name}:{" "}
-                  <Text
-                    style={[
-                      styles.attendanceText,
-                      status === "Present"
-                        ? styles.attendancePresent
-                        : status === "Late"
-                        ? styles.attendanceLate
-                        : styles.attendanceAbsent,
-                    ]}
-                  >
-                    {status}
+                <View key={student.id} style={[styles.studentCard, darkMode && styles.darkCard]}>
+                  <Text style={[styles.studentName, darkMode && styles.darkText]}>{student.name}</Text>
+                  <Text style={[styles.studentInfo, darkMode && styles.darkText]}>
+                    Age: {student.age}
                   </Text>
-                </Text>
+                  <Text style={[styles.studentInfo, darkMode && styles.darkText]}>
+                    Grade: {student.grade}
+                  </Text>
+                  <Text style={[styles.studentInfo, darkMode && styles.darkText]}>
+                    Attendance:{" "}
+                    <Text
+                      style={[
+                        styles.attendanceText,
+                        studentAttendance === "Present"
+                          ? styles.attendancePresent
+                          : studentAttendance === "Late"
+                          ? styles.attendanceLate
+                          : styles.attendanceAbsent,
+                      ]}
+                    >
+                      {studentAttendance}
+                    </Text>
+                  </Text>
+
+                  {/* Attendance Buttons */}
+                  <View style={styles.attendanceButtonsContainer}>
+                    <TouchableOpacity
+                      style={[styles.attendanceButton, styles.presentButton]}
+                      onPress={() => updateAttendance(student.id, "Present")}
+                    >
+                      <Text style={styles.buttonText}>Present</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.attendanceButton, styles.lateButton]}
+                      onPress={() => updateAttendance(student.id, "Late")}
+                    >
+                      <Text style={styles.buttonText}>Late</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.attendanceButton, styles.absentButton]}
+                      onPress={() => updateAttendance(student.id, "Absent")}
+                    >
+                      <Text style={styles.buttonText}>Absent</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
               );
             })}
           </View>
-        ))}
-      </ScrollView>
-    </SafeAreaView>
+
+          {/* Submit Button */}
+          <TouchableOpacity style={styles.submitButton} onPress={submitAttendance}>
+            <Text style={styles.buttonText}>Submit Attendance</Text>
+          </TouchableOpacity>
+
+          {/* Calendar View */}
+          <Text style={styles.calendarTitle}>Attendance Calendar</Text>
+          {Object.entries(calendar).map(([date, attendanceData]) => (
+            <View key={date} style={[styles.calendarEntry, darkMode && styles.darkCard]}>
+              <Text style={[styles.calendarDate, darkMode && styles.darkText]}>{date}</Text>
+              {Object.entries(attendanceData).map(([studentId, status]) => {
+                const student = students.find((s) => s.id === Number(studentId));
+                return (
+                  <Text key={studentId} style={[styles.calendarText, darkMode && styles.darkText]}>
+                    {student?.name}:{" "}
+                    <Text
+                      style={[
+                        styles.attendanceText,
+                        status === "Present"
+                          ? styles.attendancePresent
+                          : status === "Late"
+                          ? styles.attendanceLate
+                          : styles.attendanceAbsent,
+                      ]}
+                    >
+                      {status}
+                    </Text>
+                  </Text>
+                );
+              })}
+            </View>
+          ))}
+
+          {/* Sidebar / Settings */}
+          <Modal visible={isSidebarVisible} animationType="slide">
+            <View style={[styles.sidebar, darkMode && styles.darkCard]}>
+              <Text style={[styles.sidebarTitle, darkMode && styles.darkText]}>Settings</Text>
+              <View style={styles.sidebarOption}>
+                <Text style={[styles.sidebarOptionText, darkMode && styles.darkText]}>
+                  Dark Mode
+                </Text>
+                <Switch
+                  value={darkMode}
+                  onValueChange={toggleTheme}
+                  thumbColor={darkMode ? "#f8fafc" : "#2563eb"}
+                />
+              </View>
+              <TouchableOpacity onPress={() => setSidebarVisible(false)} style={styles.sidebarButton}>
+                <Text style={styles.buttonText}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </Modal>
+
+          <TouchableOpacity style={styles.sidebarButton} onPress={() => setSidebarVisible(true)}>
+            <Text style={styles.buttonText}>Developer Settings</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </SafeAreaView>
+    </ThemeContext.Provider>
   );
 };
 
-// Styles
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8fafc", // Light background
+    backgroundColor: "#f8fafc",
+  },
+  darkContainer: {
+    backgroundColor: "#2c2c2c",
+  },
+  darkText: {
+    color: "#f8fafc",
+  },
+  darkCard: {
+    backgroundColor: "#3a3a3a",
   },
   scrollViewContent: {
-    padding: 16,
+    padding: 20,
   },
   header: {
-    alignItems: "center",
-    marginBottom: 40, // Adjusted margin to move title further down
+    marginBottom: 20,
   },
   headerTitle: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: "bold",
-    color: "#1e3a8a", // Dark blue
+    color: "#2563eb",
   },
   headerSubtitle: {
     fontSize: 16,
-    color: "#4b5563", // Gray
-  },
-  inputContainer: {
-    marginBottom: 24,
-  },
-  input: {
-    backgroundColor: "#ffffff",
-    padding: 12,
-    borderWidth: 1,
-    borderColor: "#d1d5db",
-    borderRadius: 8,
-    marginBottom: 12,
-    fontSize: 16,
+    color: "#4b5563",
   },
   addButton: {
-    backgroundColor: "#2563eb", // Blue
-    padding: 14,
-    borderRadius: 8,
+    backgroundColor: "#2563eb",
+    padding: 10,
+    borderRadius: 5,
     alignItems: "center",
-    marginBottom: 16,
-  },
-  submitButton: {
-    backgroundColor: "#10b981", // Green
-    padding: 14,
-    borderRadius: 8,
-    alignItems: "center",
-    marginBottom: 16,
+    marginBottom: 20,
   },
   buttonText: {
     color: "#ffffff",
     fontWeight: "bold",
-    fontSize: 16,
+  },
+  inputContainer: {
+    marginBottom: 20,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: "#d1d5db",
+    borderRadius: 5,
+    padding: 10,
+    marginBottom: 10,
+    backgroundColor: "#ffffff",
   },
   studentCard: {
     backgroundColor: "#ffffff",
-    padding: 16,
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
-    borderRadius: 8,
-    marginBottom: 12,
+    padding: 15,
+    borderRadius: 5,
+    marginBottom: 10,
   },
   studentName: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: "bold",
-    color: "#1e3a8a", // Dark blue
+    color: "#1e293b",
   },
   studentInfo: {
-    fontSize: 16,
-    color: "#4b5563", // Gray
-    marginBottom: 4,
+    fontSize: 14,
+    color: "#4b5563",
   },
   attendanceText: {
     fontWeight: "bold",
   },
   attendancePresent: {
-    color: "#22c55e", // Green
+    color: "#16a34a",
   },
   attendanceLate: {
-    color: "#eab308", // Yellow
+    color: "#f59e0b",
   },
   attendanceAbsent: {
-    color: "#ef4444", // Red
+    color: "#dc2626",
   },
   attendanceButtonsContainer: {
     flexDirection: "row",
-    marginTop: 8,
+    justifyContent: "space-between",
+    marginTop: 10,
   },
   attendanceButton: {
-    flex: 1,
-    padding: 8,
-    borderRadius: 8,
+    padding: 10,
+    borderRadius: 5,
     alignItems: "center",
-    marginHorizontal: 4,
+    flex: 1,
+    marginHorizontal: 5,
   },
   presentButton: {
-    backgroundColor: "#22c55e", // Green
+    backgroundColor: "#16a34a",
   },
   lateButton: {
-    backgroundColor: "#eab308", // Yellow
+    backgroundColor: "#f59e0b",
   },
   absentButton: {
-    backgroundColor: "#ef4444", // Red
+    backgroundColor: "#dc2626",
+  },
+  submitButton: {
+    backgroundColor: "#2563eb",
+    padding: 15,
+    borderRadius: 5,
+    alignItems: "center",
+    marginTop: 20,
   },
   calendarTitle: {
     fontSize: 20,
     fontWeight: "bold",
-    color: "#1e3a8a", // Dark blue
-    marginTop: 16,
-    marginBottom: 8,
+    color: "#1e293b",
+    marginTop: 20,
   },
   calendarEntry: {
     backgroundColor: "#ffffff",
-    padding: 16,
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
-    borderRadius: 8,
-    marginBottom: 12,
+    padding: 15,
+    borderRadius: 5,
+    marginTop: 10,
   },
   calendarDate: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "bold",
-    color: "#1e3a8a", // Dark blue
-    marginBottom: 8,
+    color: "#1e293b",
   },
   calendarText: {
+    fontSize: 14,
+    color: "#4b5563",
+  },
+  sidebar: {
+    flex: 1,
+    padding: 20,
+    backgroundColor: "#ffffff",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  sidebarTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#1e293b",
+    marginBottom: 20,
+  },
+  sidebarOption: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    width: "100%",
+    marginBottom: 20,
+  },
+  sidebarOptionText: {
     fontSize: 16,
-    color: "#4b5563", // Gray
-    marginBottom: 4,
+    color: "#1e293b",
+  },
+  sidebarButton: {
+    backgroundColor: "#2563eb",
+    padding: 10,
+    borderRadius: 5,
+    alignItems: "center",
+    marginTop: 20,
   },
 });
 
