@@ -116,10 +116,11 @@
 
 import React, { useState } from "react";
 import { SafeAreaView, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
-import { useTailwind } from "tailwind-rn";
+import { useTailwind } from "tailwind-rn"; // Ensure this import is correct
 
 const App = () => {
-  const tailwind = useTailwind();
+  const tailwind = useTailwind(); // Initialize Tailwind
+
   const [students, setStudents] = useState([]);
   const [name, setName] = useState("");
   const [age, setAge] = useState("");
