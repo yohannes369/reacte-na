@@ -114,14 +114,14 @@
 //   },
 // });
 import React, { useState } from "react";
-import {
-  SafeAreaView,
-  ScrollView,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-  StyleSheet,
+import { 
+  SafeAreaView, 
+  ScrollView, 
+  Text, 
+  TextInput, 
+  TouchableOpacity, 
+  View, 
+  StyleSheet 
 } from "react-native";
 
 const App = () => {
@@ -135,20 +135,18 @@ const App = () => {
     { id: 7, name: "Reshid", age: "26", grade: "A" },
     { id: 8, name: "Ibrahim", age: "27", grade: "B" },
   ]);
-  const [attendance, setAttendance] = useState({}); // { studentId: "Present/Absent/Late" }
-  const [calendar, setCalendar] = useState({}); // { date: { studentId: "Present/Absent/Late" } }
-  const [showAddForm, setShowAddForm] = useState(false); // Toggle add student form
+  const [attendance, setAttendance] = useState({});
+  const [calendar, setCalendar] = useState({});
+  const [showAddForm, setShowAddForm] = useState(false);
   const [name, setName] = useState("");
   const [age, setAge] = useState("");
   const [grade, setGrade] = useState("");
 
-  // Get today's date in YYYY-MM-DD format
   const getTodayDate = () => {
     const today = new Date();
     return today.toISOString().split("T")[0];
   };
 
-  // Update attendance for a student
   const updateAttendance = (studentId, status) => {
     setAttendance((prev) => ({
       ...prev,
@@ -156,17 +154,15 @@ const App = () => {
     }));
   };
 
-  // Submit attendance for the current day
   const submitAttendance = () => {
     const today = getTodayDate();
     setCalendar((prev) => ({
       ...prev,
       [today]: attendance,
     }));
-    setAttendance({}); // Reset attendance for the next day
+    setAttendance({});
   };
 
-  // Add a new student
   const addStudent = () => {
     if (name && age && grade) {
       const newStudent = {
@@ -179,14 +175,15 @@ const App = () => {
       setName("");
       setAge("");
       setGrade("");
-      setShowAddForm(false); // Hide the form after adding
+      setShowAddForm(false);
     }
   };
 
-  // Delete a student
   const deleteStudent = (id) => {
     setStudents(students.filter((student) => student.id !== id));
   };
+
+  const sortedStudents = [...students].sort((a, b) => a.name.localeCompare(b.name));
 
   return (
     <SafeAreaView style={styles.container}>
@@ -237,7 +234,7 @@ const App = () => {
 
         {/* Student List */}
         <View>
-          {students.map((student) => {
+          {sortedStudents.map((student) => {
             const studentAttendance = attendance[student.id] || "Absent"; // Default to "Absent"
             return (
               <View key={student.id} style={styles.studentCard}>
@@ -334,7 +331,7 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: "center",
-    marginBottom: 24,
+    marginBottom: 40, // Adjusted margin to move title further down
   },
   headerTitle: {
     fontSize: 28,
