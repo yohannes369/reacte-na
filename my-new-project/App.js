@@ -113,14 +113,18 @@
 //     color: '#333',
 //   },
 // });
-
 import React, { useState } from "react";
-import { SafeAreaView, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
-import { useTailwind } from "tailwind-rn"; // Ensure this import is correct
+import {
+  SafeAreaView,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+  StyleSheet,
+} from "react-native";
 
 const App = () => {
-  const tailwind = useTailwind(); // Initialize Tailwind
-
   const [students, setStudents] = useState([]);
   const [name, setName] = useState("");
   const [age, setAge] = useState("");
@@ -128,7 +132,13 @@ const App = () => {
 
   const addStudent = () => {
     if (name && age && grade) {
-      const newStudent = { id: Date.now(), name, age, grade };
+      const newStudent = {
+        id: Date.now(),
+        name,
+        age,
+        grade,
+        attendance: "Absent", // Default attendance status
+      };
       setStudents([...students, newStudent]);
       setName("");
       setAge("");
@@ -140,55 +150,96 @@ const App = () => {
     setStudents(students.filter((student) => student.id !== id));
   };
 
+  const updateAttendance = (id, status) => {
+    setStudents(
+      students.map((student) =>
+        student.id === id ? { ...student, attendance: status } : student
+      )
+    );
+  };
+
   return (
-    <SafeAreaView style={tailwind("flex-1 bg-gray-100")}>
-      <ScrollView contentContainerStyle={tailwind("p-4")}>
-        <Text style={tailwind("text-2xl font-bold text-center mb-4")}>Student Management System</Text>
+    <SafeAreaView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollViewContent}>
+        <Text style={styles.title}>Bonga University Student Management System</Text>
 
         {/* Input Form */}
-        <View style={tailwind("mb-6")}>
+        <View style={styles.inputContainer}>
           <TextInput
-            style={tailwind("bg-white p-2 border border-gray-300 rounded mb-2")}
+            style={styles.input}
             placeholder="Name"
             value={name}
             onChangeText={setName}
           />
           <TextInput
-            style={tailwind("bg-white p-2 border border-gray-300 rounded mb-2")}
+            style={styles.input}
             placeholder="Age"
             value={age}
             onChangeText={setAge}
             keyboardType="numeric"
           />
           <TextInput
-            style={tailwind("bg-white p-2 border border-gray-300 rounded mb-2")}
+            style={styles.input}
             placeholder="Grade"
             value={grade}
             onChangeText={setGrade}
           />
-          <TouchableOpacity
-            style={tailwind("bg-blue-500 p-3 rounded items-center")}
-            onPress={addStudent}
-          >
-            <Text style={tailwind("text-white font-bold")}>Add Student</Text>
+          <TouchableOpacity style={styles.addButton} onPress={addStudent}>
+            <Text style={styles.buttonText}>Add Student</Text>
           </TouchableOpacity>
         </View>
 
         {/* Student List */}
         <View>
           {students.map((student) => (
-            <View
-              key={student.id}
-              style={tailwind("bg-white p-4 border border-gray-300 rounded mb-2")}
-            >
-              <Text style={tailwind("text-lg font-bold")}>{student.name}</Text>
-              <Text style={tailwind("text-gray-600")}>Age: {student.age}</Text>
-              <Text style={tailwind("text-gray-600")}>Grade: {student.grade}</Text>
+            <View key={student.id} style={styles.studentCard}>
+              <Text style={styles.studentName}>{student.name}</Text>
+              <Text style={styles.studentInfo}>Age: {student.age}</Text>
+              <Text style={styles.studentInfo}>Grade: {student.grade}</Text>
+              <Text style={styles.studentInfo}>
+                Attendance:{" "}
+                <Text
+                  style={[
+                    styles.attendanceText,
+                    student.attendance === "Present"
+                      ? styles.attendancePresent
+                      : student.attendance === "Late"
+                      ? styles.attendanceLate
+                      : styles.attendanceAbsent,
+                  ]}
+                >
+                  {student.attendance}
+                </Text>
+              </Text>
+
+              {/* Attendance Buttons */}
+              <View style={styles.attendanceButtonsContainer}>
+                <TouchableOpacity
+                  style={[styles.attendanceButton, styles.presentButton]}
+                  onPress={() => updateAttendance(student.id, "Present")}
+                >
+                  <Text style={styles.buttonText}>Present</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.attendanceButton, styles.lateButton]}
+                  onPress={() => updateAttendance(student.id, "Late")}
+                >
+                  <Text style={styles.buttonText}>Late</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.attendanceButton, styles.absentButton]}
+                  onPress={() => updateAttendance(student.id, "Absent")}
+                >
+                  <Text style={styles.buttonText}>Absent</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Delete Button */}
               <TouchableOpacity
-                style={tailwind("mt-2 bg-red-500 p-2 rounded items-center")}
+                style={styles.deleteButton}
                 onPress={() => deleteStudent(student.id)}
               >
-                <Text style={tailwind("text-white font-bold")}>Delete</Text>
+                <Text style={styles.buttonText}>Delete</Text>
               </TouchableOpacity>
             </View>
           ))}
@@ -197,5 +248,97 @@ const App = () => {
     </SafeAreaView>
   );
 };
+
+// Styles
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#f3f4f6", // bg-gray-100
+  },
+  scrollViewContent: {
+    padding: 16, // p-4
+  },
+  title: {
+    fontSize: 24, // text-2xl
+    fontWeight: "bold", // font-bold
+    textAlign: "center", // text-center
+    marginBottom: 16, // mb-4
+  },
+  inputContainer: {
+    marginBottom: 24, // mb-6
+  },
+  input: {
+    backgroundColor: "#ffffff", // bg-white
+    padding: 8, // p-2
+    borderWidth: 1, // border
+    borderColor: "#d1d5db", // border-gray-300
+    borderRadius: 4, // rounded
+    marginBottom: 8, // mb-2
+  },
+  addButton: {
+    backgroundColor: "#3b82f6", // bg-blue-500
+    padding: 12, // p-3
+    borderRadius: 4, // rounded
+    alignItems: "center", // items-center
+  },
+  buttonText: {
+    color: "#ffffff", // text-white
+    fontWeight: "bold", // font-bold
+  },
+  studentCard: {
+    backgroundColor: "#ffffff", // bg-white
+    padding: 16, // p-4
+    borderWidth: 1, // border
+    borderColor: "#d1d5db", // border-gray-300
+    borderRadius: 4, // rounded
+    marginBottom: 8, // mb-2
+  },
+  studentName: {
+    fontSize: 18, // text-lg
+    fontWeight: "bold", // font-bold
+  },
+  studentInfo: {
+    color: "#4b5563", // text-gray-600
+  },
+  attendanceText: {
+    fontWeight: "bold",
+  },
+  attendancePresent: {
+    color: "#22c55e", // text-green-500
+  },
+  attendanceLate: {
+    color: "#eab308", // text-yellow-500
+  },
+  attendanceAbsent: {
+    color: "#ef4444", // text-red-500
+  },
+  attendanceButtonsContainer: {
+    flexDirection: "row", // flex-row
+    marginTop: 8, // mt-2
+  },
+  attendanceButton: {
+    flex: 1, // flex-1
+    padding: 8, // p-2
+    borderRadius: 4, // rounded
+    alignItems: "center", // items-center
+    marginHorizontal: 4, // mx-1
+  },
+  presentButton: {
+    backgroundColor: "#22c55e", // bg-green-500
+  },
+  lateButton: {
+    backgroundColor: "#eab308", // bg-yellow-500
+  },
+  absentButton: {
+    backgroundColor: "#ef4444", // bg-red-500
+  },
+  deleteButton: {
+    backgroundColor: "#ef4444", // bg-red-500
+    padding: 8, // p-2
+    borderRadius: 4, // rounded
+    alignItems: "center", // items-center
+    marginTop: 8, // mt-2
+  },
+});
 
 export default App;
