@@ -125,11 +125,41 @@ import {
 } from "react-native";
 
 const App = () => {
-  const [students, setStudents] = useState([]);
+  const [students, setStudents] = useState([
+    { id: 1, name: "Yohann", age: "20", grade: "A" },
+    { id: 2, name: "Ayana", age: "21", grade: "B" },
+    { id: 3, name: "Mikiyas", age: "22", grade: "C" },
+    { id: 4, name: "Madiso", age: "23", grade: "A" },
+    { id: 5, name: "Yosef", age: "24", grade: "B" },
+    { id: 6, name: "Biruk", age: "25", grade: "C" },
+    { id: 7, name: "Reshid", age: "26", grade: "A" },
+    { id: 8, name: "Ibrahim", age: "27", grade: "B" },
+  ]);
+  const [attendance, setAttendance] = useState({}); // { date: { studentId: "Present/Absent/Late" } }
+  const [showAddForm, setShowAddForm] = useState(false); // Toggle add student form
   const [name, setName] = useState("");
   const [age, setAge] = useState("");
   const [grade, setGrade] = useState("");
 
+  // Get today's date in YYYY-MM-DD format
+  const getTodayDate = () => {
+    const today = new Date();
+    return today.toISOString().split("T")[0];
+  };
+
+  // Update attendance for a student on the current day
+  const updateAttendance = (studentId, status) => {
+    const today = getTodayDate();
+    setAttendance((prev) => ({
+      ...prev,
+      [today]: {
+        ...prev[today],
+        [studentId]: status,
+      },
+    }));
+  };
+
+  // Add a new student
   const addStudent = () => {
     if (name && age && grade) {
       const newStudent = {
@@ -137,112 +167,125 @@ const App = () => {
         name,
         age,
         grade,
-        attendance: "Absent", // Default attendance status
       };
       setStudents([...students, newStudent]);
       setName("");
       setAge("");
       setGrade("");
+      setShowAddForm(false); // Hide the form after adding
     }
   };
 
+  // Delete a student
   const deleteStudent = (id) => {
     setStudents(students.filter((student) => student.id !== id));
-  };
-
-  const updateAttendance = (id, status) => {
-    setStudents(
-      students.map((student) =>
-        student.id === id ? { ...student, attendance: status } : student
-      )
-    );
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
-        <Text style={styles.title}>Bonga University Student Management System</Text>
-
-        {/* Input Form */}
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            placeholder="Name"
-            value={name}
-            onChangeText={setName}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Age"
-            value={age}
-            onChangeText={setAge}
-            keyboardType="numeric"
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Grade"
-            value={grade}
-            onChangeText={setGrade}
-          />
-          <TouchableOpacity style={styles.addButton} onPress={addStudent}>
-            <Text style={styles.buttonText}>Add Student</Text>
-          </TouchableOpacity>
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Bonga University</Text>
+          <Text style={styles.headerSubtitle}>Student Management System</Text>
         </View>
+
+        {/* Add Student Button */}
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={() => setShowAddForm(!showAddForm)}
+        >
+          <Text style={styles.buttonText}>
+            {showAddForm ? "Cancel" : "Add Student"}
+          </Text>
+        </TouchableOpacity>
+
+        {/* Add Student Form */}
+        {showAddForm && (
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={styles.input}
+              placeholder="Name"
+              value={name}
+              onChangeText={setName}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Age"
+              value={age}
+              onChangeText={setAge}
+              keyboardType="numeric"
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Grade"
+              value={grade}
+              onChangeText={setGrade}
+            />
+            <TouchableOpacity style={styles.addButton} onPress={addStudent}>
+              <Text style={styles.buttonText}>Save Student</Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
         {/* Student List */}
         <View>
-          {students.map((student) => (
-            <View key={student.id} style={styles.studentCard}>
-              <Text style={styles.studentName}>{student.name}</Text>
-              <Text style={styles.studentInfo}>Age: {student.age}</Text>
-              <Text style={styles.studentInfo}>Grade: {student.grade}</Text>
-              <Text style={styles.studentInfo}>
-                Attendance:{" "}
-                <Text
-                  style={[
-                    styles.attendanceText,
-                    student.attendance === "Present"
-                      ? styles.attendancePresent
-                      : student.attendance === "Late"
-                      ? styles.attendanceLate
-                      : styles.attendanceAbsent,
-                  ]}
-                >
-                  {student.attendance}
+          {students.map((student) => {
+            const today = getTodayDate();
+            const studentAttendance = attendance[today]?.[student.id] || "Absent"; // Default to "Absent"
+            return (
+              <View key={student.id} style={styles.studentCard}>
+                <Text style={styles.studentName}>{student.name}</Text>
+                <Text style={styles.studentInfo}>Age: {student.age}</Text>
+                <Text style={styles.studentInfo}>Grade: {student.grade}</Text>
+                <Text style={styles.studentInfo}>
+                  Attendance:{" "}
+                  <Text
+                    style={[
+                      styles.attendanceText,
+                      studentAttendance === "Present"
+                        ? styles.attendancePresent
+                        : studentAttendance === "Late"
+                        ? styles.attendanceLate
+                        : styles.attendanceAbsent,
+                    ]}
+                  >
+                    {studentAttendance}
+                  </Text>
                 </Text>
-              </Text>
 
-              {/* Attendance Buttons */}
-              <View style={styles.attendanceButtonsContainer}>
+                {/* Attendance Buttons */}
+                <View style={styles.attendanceButtonsContainer}>
+                  <TouchableOpacity
+                    style={[styles.attendanceButton, styles.presentButton]}
+                    onPress={() => updateAttendance(student.id, "Present")}
+                  >
+                    <Text style={styles.buttonText}>Present</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.attendanceButton, styles.lateButton]}
+                    onPress={() => updateAttendance(student.id, "Late")}
+                  >
+                    <Text style={styles.buttonText}>Late</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.attendanceButton, styles.absentButton]}
+                    onPress={() => updateAttendance(student.id, "Absent")}
+                  >
+                    <Text style={styles.buttonText}>Absent</Text>
+                  </TouchableOpacity>
+                </View>
+
+                {/* Delete Button */}
                 <TouchableOpacity
-                  style={[styles.attendanceButton, styles.presentButton]}
-                  onPress={() => updateAttendance(student.id, "Present")}
+                  style={styles.deleteButton}
+                  onPress={() => deleteStudent(student.id)}
                 >
-                  <Text style={styles.buttonText}>Present</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.attendanceButton, styles.lateButton]}
-                  onPress={() => updateAttendance(student.id, "Late")}
-                >
-                  <Text style={styles.buttonText}>Late</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.attendanceButton, styles.absentButton]}
-                  onPress={() => updateAttendance(student.id, "Absent")}
-                >
-                  <Text style={styles.buttonText}>Absent</Text>
+                  <Text style={styles.buttonText}>Delete</Text>
                 </TouchableOpacity>
               </View>
-
-              {/* Delete Button */}
-              <TouchableOpacity
-                style={styles.deleteButton}
-                onPress={() => deleteStudent(student.id)}
-              >
-                <Text style={styles.buttonText}>Delete</Text>
-              </TouchableOpacity>
-            </View>
-          ))}
+            );
+          })}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -253,91 +296,104 @@ const App = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f3f4f6", // bg-gray-100
+    backgroundColor: "#f8fafc", // Light background
   },
   scrollViewContent: {
-    padding: 16, // p-4
+    padding: 16,
   },
-  title: {
-    fontSize: 24, // text-2xl
-    fontWeight: "bold", // font-bold
-    textAlign: "center", // text-center
-    marginBottom: 16, // mb-4
+  header: {
+    alignItems: "center",
+    marginBottom: 24,
+  },
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: "bold",
+    color: "#1e3a8a", // Dark blue
+  },
+  headerSubtitle: {
+    fontSize: 16,
+    color: "#4b5563", // Gray
   },
   inputContainer: {
-    marginBottom: 24, // mb-6
+    marginBottom: 24,
   },
   input: {
-    backgroundColor: "#ffffff", // bg-white
-    padding: 8, // p-2
-    borderWidth: 1, // border
-    borderColor: "#d1d5db", // border-gray-300
-    borderRadius: 4, // rounded
-    marginBottom: 8, // mb-2
+    backgroundColor: "#ffffff",
+    padding: 12,
+    borderWidth: 1,
+    borderColor: "#d1d5db",
+    borderRadius: 8,
+    marginBottom: 12,
+    fontSize: 16,
   },
   addButton: {
-    backgroundColor: "#3b82f6", // bg-blue-500
-    padding: 12, // p-3
-    borderRadius: 4, // rounded
-    alignItems: "center", // items-center
+    backgroundColor: "#2563eb", // Blue
+    padding: 14,
+    borderRadius: 8,
+    alignItems: "center",
+    marginBottom: 16,
   },
   buttonText: {
-    color: "#ffffff", // text-white
-    fontWeight: "bold", // font-bold
+    color: "#ffffff",
+    fontWeight: "bold",
+    fontSize: 16,
   },
   studentCard: {
-    backgroundColor: "#ffffff", // bg-white
-    padding: 16, // p-4
-    borderWidth: 1, // border
-    borderColor: "#d1d5db", // border-gray-300
-    borderRadius: 4, // rounded
-    marginBottom: 8, // mb-2
+    backgroundColor: "#ffffff",
+    padding: 16,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    borderRadius: 8,
+    marginBottom: 12,
   },
   studentName: {
-    fontSize: 18, // text-lg
-    fontWeight: "bold", // font-bold
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#1e3a8a", // Dark blue
   },
   studentInfo: {
-    color: "#4b5563", // text-gray-600
+    fontSize: 16,
+    color: "#4b5563", // Gray
+    marginBottom: 4,
   },
   attendanceText: {
     fontWeight: "bold",
   },
   attendancePresent: {
-    color: "#22c55e", // text-green-500
+    color: "#22c55e", // Green
   },
   attendanceLate: {
-    color: "#eab308", // text-yellow-500
+    color: "#eab308", // Yellow
   },
   attendanceAbsent: {
-    color: "#ef4444", // text-red-500
+    color: "#ef4444", // Red
   },
   attendanceButtonsContainer: {
-    flexDirection: "row", // flex-row
-    marginTop: 8, // mt-2
+    flexDirection: "row",
+    marginTop: 8,
   },
   attendanceButton: {
-    flex: 1, // flex-1
-    padding: 8, // p-2
-    borderRadius: 4, // rounded
-    alignItems: "center", // items-center
-    marginHorizontal: 4, // mx-1
+    flex: 1,
+    padding: 8,
+    borderRadius: 8,
+    alignItems: "center",
+    marginHorizontal: 4,
   },
   presentButton: {
-    backgroundColor: "#22c55e", // bg-green-500
+    backgroundColor: "#22c55e", // Green
   },
   lateButton: {
-    backgroundColor: "#eab308", // bg-yellow-500
+    backgroundColor: "#eab308", // Yellow
   },
   absentButton: {
-    backgroundColor: "#ef4444", // bg-red-500
+    backgroundColor: "#ef4444", // Red
   },
   deleteButton: {
-    backgroundColor: "#ef4444", // bg-red-500
-    padding: 8, // p-2
-    borderRadius: 4, // rounded
-    alignItems: "center", // items-center
-    marginTop: 8, // mt-2
+    backgroundColor: "#ef4444", // Red
+    padding: 8,
+    borderRadius: 8,
+    alignItems: "center",
+    marginTop: 8,
   },
 });
 
