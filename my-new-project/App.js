@@ -135,7 +135,8 @@ const App = () => {
     { id: 7, name: "Reshid", age: "26", grade: "A" },
     { id: 8, name: "Ibrahim", age: "27", grade: "B" },
   ]);
-  const [attendance, setAttendance] = useState({}); // { date: { studentId: "Present/Absent/Late" } }
+  const [attendance, setAttendance] = useState({}); // { studentId: "Present/Absent/Late" }
+  const [calendar, setCalendar] = useState({}); // { date: { studentId: "Present/Absent/Late" } }
   const [showAddForm, setShowAddForm] = useState(false); // Toggle add student form
   const [name, setName] = useState("");
   const [age, setAge] = useState("");
@@ -147,16 +148,22 @@ const App = () => {
     return today.toISOString().split("T")[0];
   };
 
-  // Update attendance for a student on the current day
+  // Update attendance for a student
   const updateAttendance = (studentId, status) => {
-    const today = getTodayDate();
     setAttendance((prev) => ({
       ...prev,
-      [today]: {
-        ...prev[today],
-        [studentId]: status,
-      },
+      [studentId]: status,
     }));
+  };
+
+  // Submit attendance for the current day
+  const submitAttendance = () => {
+    const today = getTodayDate();
+    setCalendar((prev) => ({
+      ...prev,
+      [today]: attendance,
+    }));
+    setAttendance({}); // Reset attendance for the next day
   };
 
   // Add a new student
@@ -231,8 +238,7 @@ const App = () => {
         {/* Student List */}
         <View>
           {students.map((student) => {
-            const today = getTodayDate();
-            const studentAttendance = attendance[today]?.[student.id] || "Absent"; // Default to "Absent"
+            const studentAttendance = attendance[student.id] || "Absent"; // Default to "Absent"
             return (
               <View key={student.id} style={styles.studentCard}>
                 <Text style={styles.studentName}>{student.name}</Text>
@@ -275,18 +281,43 @@ const App = () => {
                     <Text style={styles.buttonText}>Absent</Text>
                   </TouchableOpacity>
                 </View>
-
-                {/* Delete Button */}
-                <TouchableOpacity
-                  style={styles.deleteButton}
-                  onPress={() => deleteStudent(student.id)}
-                >
-                  <Text style={styles.buttonText}>Delete</Text>
-                </TouchableOpacity>
               </View>
             );
           })}
         </View>
+
+        {/* Submit Button */}
+        <TouchableOpacity style={styles.submitButton} onPress={submitAttendance}>
+          <Text style={styles.buttonText}>Submit Attendance</Text>
+        </TouchableOpacity>
+
+        {/* Calendar View */}
+        <Text style={styles.calendarTitle}>Attendance Calendar</Text>
+        {Object.entries(calendar).map(([date, attendanceData]) => (
+          <View key={date} style={styles.calendarEntry}>
+            <Text style={styles.calendarDate}>{date}</Text>
+            {Object.entries(attendanceData).map(([studentId, status]) => {
+              const student = students.find((s) => s.id === Number(studentId));
+              return (
+                <Text key={studentId} style={styles.calendarText}>
+                  {student?.name}:{" "}
+                  <Text
+                    style={[
+                      styles.attendanceText,
+                      status === "Present"
+                        ? styles.attendancePresent
+                        : status === "Late"
+                        ? styles.attendanceLate
+                        : styles.attendanceAbsent,
+                    ]}
+                  >
+                    {status}
+                  </Text>
+                </Text>
+              );
+            })}
+          </View>
+        ))}
       </ScrollView>
     </SafeAreaView>
   );
@@ -328,6 +359,13 @@ const styles = StyleSheet.create({
   },
   addButton: {
     backgroundColor: "#2563eb", // Blue
+    padding: 14,
+    borderRadius: 8,
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  submitButton: {
+    backgroundColor: "#10b981", // Green
     padding: 14,
     borderRadius: 8,
     alignItems: "center",
@@ -388,12 +426,31 @@ const styles = StyleSheet.create({
   absentButton: {
     backgroundColor: "#ef4444", // Red
   },
-  deleteButton: {
-    backgroundColor: "#ef4444", // Red
-    padding: 8,
+  calendarTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#1e3a8a", // Dark blue
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  calendarEntry: {
+    backgroundColor: "#ffffff",
+    padding: 16,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
     borderRadius: 8,
-    alignItems: "center",
-    marginTop: 8,
+    marginBottom: 12,
+  },
+  calendarDate: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#1e3a8a", // Dark blue
+    marginBottom: 8,
+  },
+  calendarText: {
+    fontSize: 16,
+    color: "#4b5563", // Gray
+    marginBottom: 4,
   },
 });
 
